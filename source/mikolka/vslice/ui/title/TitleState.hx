@@ -479,7 +479,8 @@ class TitleState extends MusicBeatState
 					// FlxG.sound.music.stop();
 					FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
 					#if VIDEOS_ALLOWED
-					FlxG.sound.music.onComplete = moveToAttract;
+					//only allow it to move to attract if the music's length is greater than 10 seconds
+					if (FlxG.sound.music.length > 1000) FlxG.sound.music.onComplete = moveToAttract;
 					#end
 					FlxG.sound.music.fadeIn(4, 0, 0.7);
 				case 17:
@@ -496,7 +497,7 @@ class TitleState extends MusicBeatState
 		if (!skippedIntro)
 		{
 			#if VIDEOS_ALLOWED
-			FlxG.sound.music.onComplete = moveToAttract;
+			if (FlxG.sound.music.length > 1000) FlxG.sound.music.onComplete = moveToAttract;
 			#end
 			#if TITLE_SCREEN_EASTER_EGG
 			if (playJingle) // Ignore deez
@@ -631,7 +632,7 @@ class TitleState extends MusicBeatState
 	 */
 	function moveToAttract():Void
 	{
-		if (!Std.isOfType(FlxG.state, TitleState) || FlxG.sound.music == null)
+		if (!Std.isOfType(FlxG.state, TitleState))
 			return;
 		#if VIDEOS_ALLOWED
 			#if LEGACY_PSYCH
