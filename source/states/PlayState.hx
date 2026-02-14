@@ -2525,7 +2525,7 @@ class PlayState extends MusicBeatState
 			#if desktop
 			if (ffmpegMode) {
 				if (video.wentPreview == null) {
-					botplayTxt.text = botplaySineCnt % 2 == 0 ? "RENDERED" : "BY H-SLICE-JS";
+					botplayTxt.text = botplaySineCnt % 2 == 0 ? "RENDERED" : "BY H-SLICE + JS";
 				} else {
 					botplayTxt.text = botplaySineCnt % 2 == 0 ? "Rendering was cancelled by: " : video.wentPreview;
 				}
