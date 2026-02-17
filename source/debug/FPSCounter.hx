@@ -51,9 +51,6 @@ class FPSCounter extends TextField
 	var deltaTimeout:Float = 0.0;
 	var delta:Int = 0;
 
-	var nanoSecond:Float = 0.0;
-	var nanoDelay:Float = 0.0;
-
 	var sliceCnt:Int = 0;
 	var sum:Int = 0;
 	var avg:Float = 0;
@@ -101,13 +98,6 @@ class FPSCounter extends TextField
 	private override function __enterFrame(deltaTime:Float):Void
 	{
 		if (!ClientPrefs.data.showFPS || !visible || FlxG.autoPause && !stage.nativeWindow.active) return;
-
-		if (ClientPrefs.data.nanoPosition) {
-			nanoDelay = CoolUtil.getNanoTime() - nanoSecond;
-			nanoSecond = CoolUtil.getNanoTime();
-
-			deltaTime = nanoDelay * 1000;
-		}
 		
 		sliceCnt = 0; delta = Math.round(deltaTime);
 		times.push(delta); sum += delta; updated = false;
@@ -127,7 +117,7 @@ class FPSCounter extends TextField
 		if (deltaTimeout < 1000 / updateRate) return;
 		
 		// Literally the stupidest thing i've done for the FPS counter but it allows it to update correctly when on 60 FPS??
-		currentFPS = Math.round(avg); //Math.round((times.length + cacheCount) * 0.5) - 1;
+		currentFPS = Math.round(avg);
 		updateText(Math.round(1000 / deltaTime));
 		deltaTimeout = 0.0;
 	}

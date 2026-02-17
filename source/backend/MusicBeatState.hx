@@ -156,6 +156,7 @@ class MusicBeatState extends FlxState
 
 	var countJudge:Bool = false;
 	var tracingStr:String = "";
+	var isFirstSection:Bool = false;
 	override function update(elapsed:Float)
 	{
 		//everyStep();
@@ -171,7 +172,12 @@ class MusicBeatState extends FlxState
 		// tracingStr = '$oldStep, $varStep, $curStep, ${CoolUtil.floatToStringPrecision(curDecStep, 3)}, $curBeat';
 
 		if (oldStep != curStep) {
-			if(curStep > 0) stepHit();
+			isFirstSection = curStep >= 0 && oldStep < 0;
+			// Original code doesn't run any step/beat/sectionHit in first step, so I tried to fix it.
+			if (curStep > 0 || isFirstSection) {
+				stepHit();
+				if (isFirstSection && PlayState.SONG != null) sectionHit();
+			}
 
 			if(PlayState.SONG != null)
 			{

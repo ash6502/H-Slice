@@ -49,7 +49,7 @@ typedef CastNote = {
 	// 15th bit is for blockHit
 	// 16th bit is for ignoreNote
 	var noteData:Int;
-	@:optional var density:Float;
+	@:optional var density:Null<Float>;
 	@:optional var holdLength:Null<Float>;
 	@:optional var noteType:String;
 	@:optional var cmpSpam:Array<Dynamic>;
