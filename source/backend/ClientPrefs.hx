@@ -48,6 +48,7 @@ import states.InitState;
 	public var hideOverlapped:Float = 0;
 	public var processFirst:Bool = true;
 	public var skipSpawnNote:Bool = true;
+	public var bulkSkip:Bool = true;
 	public var breakTimeLimit:Bool = true;
 	public var optimizeSpawnNote:Bool = true;
 	public var noteHitPreEvent:Bool = true;

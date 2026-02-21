@@ -383,6 +383,7 @@ class PlayState extends MusicBeatState
 	var limitNotes:Int = ClientPrefs.data.limitNotes;
 	var hideOverlapped:Float = ClientPrefs.data.hideOverlapped;
 	var skipSpawnNote:Bool = ClientPrefs.data.skipSpawnNote;
+	var bulkSkip:Bool = ClientPrefs.data.bulkSkip;
 	var breakTimeLimit:Bool = ClientPrefs.data.breakTimeLimit;
 	var optimizeSpawnNote:Bool = ClientPrefs.data.optimizeSpawnNote;
 
@@ -3114,7 +3115,7 @@ class PlayState extends MusicBeatState
 	}
 
 	inline function fastSkipRegularNotes(fp:Float):Bool {
-		if (!optimizeSpawnNote && !skipSpawnNote)
+		if ((!optimizeSpawnNote && !skipSpawnNote) || !bulkSkip)
 			return false;
 
 		lastId = findSkipBoundary(currentId, fp);
