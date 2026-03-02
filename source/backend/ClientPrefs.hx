@@ -116,6 +116,7 @@ import states.InitState;
 	public var ghostTapping:Bool = true;
 	public var skipGhostNotes:Bool = false;
 	public var ghostRange:Float = 0.01;
+	public var ghostDencity:Bool = true;
 	public var autoPause:Bool = true;
 	public var checkForUpdates:Bool = true;
 	public var noReset:Bool = false;
@@ -132,6 +133,7 @@ import states.InitState;
 	public var goodWindow:Int = 90;
 	public var badWindow:Int = 135;
 	public var safeFrames:Float = 10;
+	public var worldRecordMode:Bool = false;
 	public var f11Shortcut:Bool = false;
 	public var cacheOnCPU:Bool = #if android false #else true #end;
 

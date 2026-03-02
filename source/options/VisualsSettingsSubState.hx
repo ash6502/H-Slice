@@ -560,13 +560,13 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		super.destroy();
 	}
 
-	function onChangeFPSCounter()
+	public static function onChangeFPSCounter()
 	{
 		if (Main.fpsVar != null) Main.fpsVar.visible = ClientPrefs.data.showFPS;
 		if (Main.fpsBg != null) Main.fpsBg.visible = ClientPrefs.data.showFPS;
 	}
 	
-	function onChangeFPSCounterHeight()
+	public static function onChangeFPSCounterHeight()
 	{
 		Main.fpsBg.relocate(0, 0, ClientPrefs.data.wideScreen);
 	}

@@ -185,6 +185,7 @@ class PlayState extends MusicBeatState
 	public static var spamNotes:Array<SpamNoteData> = [];
 
 	public var skipGhostNotes:Bool = ClientPrefs.data.skipGhostNotes;
+	public var ghostDencity:Bool = ClientPrefs.data.ghostDencity;
 	public var ghostNotesCaught:Int = 0;
 
 	public var camFollow:FlxObject;
@@ -403,6 +404,9 @@ class PlayState extends MusicBeatState
 	// songTime but it's based in nano second lmfao.
 	public static var nanoTime:Float = 0;
 	public static var elapsedNano:Float = 0;
+
+	// for original H-Slice
+	var worldRecordMode = ClientPrefs.data.worldRecordMode;
 	
 	private static var _lastLoadedModDirectory:String = '';
 	public static var nextReloadAll:Bool = false;
@@ -427,10 +431,11 @@ class PlayState extends MusicBeatState
 		"Heaven or hell",
 		"I'll give u the gift called empty",
 		"Imagine 1 billion notes fnf chart",
+		"Imagine 1 tillion notes fnf chart",
 		"Run away or someone comes",
 		"Disguised face",
 		"Is rainbow eyesore a drug",
-		"Divived by 0 equals 42",
+		"Any number divided by 0 equals 42",
 		"It's just a text",
 		"Wait, who are you",
 		"Hello, visitor!",
@@ -438,7 +443,6 @@ class PlayState extends MusicBeatState
 		"Amogus",
 		"Is it impossible?",
 		"Testing... just testing...",
-		"Imagine 1 tillion notes fnf chart",
 		"Gf neck is getting bonk",
 		"It's a benchmark",
 		"B0TPL4Y",
@@ -446,7 +450,7 @@ class PlayState extends MusicBeatState
 		"Never gonna give you up",
 		"Spamming spamming spamming",
 		"Beware memory leaks",
-		"When would it can multi-threaded processing",
+		"When would it can multi-threaded processing", // sadly opengl only supports single-threaded rendering... i'll wait haxeflixel can use vulkan
 		"Help me, I have programming skill issue",
 		"Demon is inside bot",
 		"Don't worry, You can beat this",
@@ -1979,7 +1983,9 @@ class PlayState extends MusicBeatState
 					// CLEAR ANY POSSIBLE GHOST NOTES WHEN IF THE OPTION ENABLED
 					if (skipGhostNotes && sectionNoteCnt != 0) {
 						if (Math.abs(strumTimeVector[chartNoteData] - strumTime) <= removeTime) {
-							ghostNotesCaught++; swagNote.density++; continue;
+							ghostNotesCaught++;
+							ghostDencity ? swagNote.density++ : swagNote.density = 1;
+							continue;
 						} else {
 							strumTimeVector[chartNoteData] = strumTime;
 						}
@@ -1990,13 +1996,14 @@ class PlayState extends MusicBeatState
 						noteData: noteColumn
 					};
 					if (skipGhostNotes && (swagNote.density == null || swagNote.density > 1)) swagNote.density = 1;
-					
+
 					if (Std.isOfType(songNotes[3], String))
 						swagNote.noteType = songNotes[3];
 					
-
-					burst = extractSpamData(songNotes);
-					if (burst != null) swagNote.cmpSpam = burst;
+					if (!worldRecordMode) {
+						burst = extractSpamData(songNotes);
+						if (burst != null) swagNote.cmpSpam = burst;
+					}
 					
 					swagNote.noteData |= gottaHitNote ? 1<<8 : 0; // mustHit
 					swagNote.noteData |= (section.gfSection && (gfSide ? gottaHitNote : !gottaHitNote)) || songNotes[3] == 'GF Sing' || songNotes[3] == 4 ? 1<<11 : 0; // gfNote

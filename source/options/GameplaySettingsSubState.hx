@@ -86,13 +86,13 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Remove Overlapped Notes',
-			"If checked, the game will remove notes which are hidden behind the others.\nThe range is controlled by the option below.",
+			"If checked, the game skips loading notes which are hidden behind the others.",
 			'skipGhostNotes',
 			BOOL);
 		addOption(option);
 
-		var option:Option = new Option(' - Threshold:',
-			"Threshold of the option above.\nYou can set it in milliseconds.",
+		var option:Option = new Option('- Threshold:',
+			"Threshold of the option above.\nDisplayed in milliseconds, but configurable in microseconds.",
 			'ghostRange',
 			FLOAT);
 		option.displayFormat = '%v ms';
@@ -104,6 +104,14 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = onRangeUpdateRate;
 		ghostRate = option;
+		
+		// It should never happen in the first place...
+		var option:Option = new Option('Simulate Unremoved Overlapped Notes',
+			"It only works with enabled above option, and breaks consistency of the rendered counter.\nCAUTION: If you changed even once this option, It reloads the entire chart when went back to PlayState!",
+			'ghostDencity',
+			BOOL);
+		addOption(option);
+		option.onChange = onChangeSimulation;
 		
 		var option:Option = new Option('Auto Pause',
 			"If checked, the game automatically pauses if the screen isn't on focus.",
@@ -263,6 +271,12 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.changeValue = 0.1;
 		addOption(option);
 
+		var option:Option = new Option('World Record Mode',
+			"If checked, any option which loses consistency are disabled,\nlike note dencity value, and compressed notes.\nIt's also useful to enjoy the original 'H-Slice'.",
+			'worldRecordMode',
+			'bool');
+		addOption(option);
+
 		#if desktop
 		var option:Option = new Option('Full Screen shortcut on F11',
 			"If checked, the F11 key will toggle full screen, just like Alt+Enter.\nIt's for avoiding other processing interruptions.",
@@ -272,6 +286,10 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		#end
 
 		super();
+	}
+
+	function onChangeSimulation() {
+		PlayState.loaded = false;
 	}
 
 	function onStepUpdateRate(){

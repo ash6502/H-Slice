@@ -131,7 +131,7 @@ class FPSCounter extends TextField
 	public dynamic function updateText(deltaTime:Float) {
 		if (ClientPrefs.data.ffmpegMode) {
 			targetFPS = CoolUtil.fillNumber(ClientPrefs.data.targetFPS, FlxMath.minInt(4, Std.string(ClientPrefs.data.targetFPS).length+1), 32, false);
-			fpsStr = 'FPS:$targetFPS - RENDERING${MemoryUtil.isGcEnabled ? '' : " / No GC"}\n';
+			fpsStr = 'FPS:$targetFPS - RENDERING${MemoryUtil.isGcEnabled ? "" : " / No GC"}${ClientPrefs.data.worldRecordMode ? " / WR Mode" : ""}\n';
 		} else {
 			realFPS = CoolUtil.fillNumber(deltaTime, FlxMath.minInt(4, Std.string(deltaTime).length+1), 32, false);
 			avgFPS = CoolUtil.fillNumber(currentFPS, FlxMath.minInt(4, Std.string(currentFPS).length+1), 32, false);

@@ -13,6 +13,9 @@ class ShareSettingsSubState extends BaseOptionsMenu {
 
     var offTimer:FlxTimer = new FlxTimer();
 
+    var exportOption:Option;
+    var importOption:Option;
+
     public function new() {
 		// Working in Progress!
         // var option:Option = new Option('Working in Progress', //Name
@@ -31,6 +34,7 @@ class ShareSettingsSubState extends BaseOptionsMenu {
 			BOOL);
 		option.onChange = exportJSON;
         option.setValue(false);
+        exportOption = option;
 		addOption(option);
 
         var option:Option = new Option('Import Settings',
@@ -40,6 +44,7 @@ class ShareSettingsSubState extends BaseOptionsMenu {
 			BOOL);
 		option.onChange = importJSON;
         option.setValue(false);
+        importOption = option;
 		addOption(option);
         
         var option:Option = new Option('Formatted JSON',
@@ -83,9 +88,14 @@ class ShareSettingsSubState extends BaseOptionsMenu {
 	}
 
     function turnOFF(playSnd:String = "") {
+        // Reset animations the export & import options
+        exportOption.setValue(false);
+        importOption.setValue(false);
+
         if (CoolUtil.notBlank(playSnd)) FlxG.sound.play(Paths.sound(playSnd), ClientPrefs.data.sfxVolume);
         
-        var o = curOption; // prevent to overwrite other configs
+        // Get the option to play the animation
+        var o = curOption;
         o.setValue(true);
         reloadCheckboxes();
 
@@ -106,7 +116,6 @@ class ShareSettingsSubState extends BaseOptionsMenu {
 
     // export settings
     function exportJSON() {
-        curOption.setValue(false); // it's not even a bug but it's for preventing to confuse
         var str = ClientPrefs.data.formatJS ? PsychJsonPrinter.print(ClientPrefs.data) : Json.stringify(ClientPrefs.data);
         if (#if mobile true #else ClientPrefs.data.clipboard #end) {
             Clipboard.text = str;
@@ -118,15 +127,14 @@ class ShareSettingsSubState extends BaseOptionsMenu {
                     turnOFF('confirmMenu');
                     showMsg('Exporting settings was completed successfully!\nCheck the saved file in ${fileDialog.path}');
                 },
-                () -> turnOFF('cancelMenu'), // cancelled
-                () -> turnOFF('cancelMenu'), // failed, but it happened when cancelled or closed the window too
+                () -> turnOFF('cancelMenu'), // canceled
+                () -> turnOFF('cancelMenu'), // failed, but it happened when canceled or closed the window too
             );
         }
     }
 
     // import settings
     function importJSON() {
-        curOption.setValue(false);
         try {
             if (#if mobile true #else ClientPrefs.data.clipboard #end) {
                 if (!doImporting(Clipboard.text)) {
@@ -149,7 +157,6 @@ class ShareSettingsSubState extends BaseOptionsMenu {
             turnOFF('soundtray/VolMAX');
             showMsg('Importing settings was failed by error: ${x.message}\n\n${x.stack}');
         }
-		Main.fpsBg.relocate(0, 0, ClientPrefs.data.wideScreen);
     }
 
     function doImporting(str) {
@@ -178,14 +185,17 @@ class ShareSettingsSubState extends BaseOptionsMenu {
             }
         }
         
-        for (key in fields) {
-            if (key != 'gameplaySettings')
-                Reflect.setField(ClientPrefs.data, key, Reflect.field(data, key));
-        }
+        for (key in fields) 
+            Reflect.setField(ClientPrefs.data, key, Reflect.field(data, key));
 
         var fields = skipCnt > 1 ? 'fields' : 'field';
         ClientPrefs.saveSettings();
         ClientPrefs.loadPrefs();
+        
+        // Update the FPS Counter Status
+        VisualsSettingsSubState.onChangeFPSCounter();
+        VisualsSettingsSubState.onChangeFPSCounterHeight();
+
         turnOFF('confirmMenu');
         showMsg('Importing was completed successfully!');
         return true;

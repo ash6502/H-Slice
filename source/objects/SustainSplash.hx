@@ -16,6 +16,7 @@ class SustainSplash extends FlxSprite
 
 	var rnd:FlxRandom;
 	var timer:FlxTimer;
+	var animId:String;
 
 	public function new():Void
 	{
@@ -31,22 +32,32 @@ class SustainSplash extends FlxSprite
 		rnd = new FlxRandom();
 
 		frames = Paths.getSparrowAtlas('holdCovers/holdCover-' + ClientPrefs.data.holdSkin);
-		noShader = ClientPrefs.data.holdSkin.toLowerCase().contains('classic') || !ClientPrefs.data.noteShaders;
+		noShader = ClientPrefs.data.holdSkin.toLowerCase().contains('classic');
 
 		if (noShader) {
+			// Load anims for without color shader
 			for (i => str in Note.colArray) {
-				var pascalCase = str.substr(0,1).toUpperCase() + str.substr(1).toLowerCase();
+				var pascalCase = str.substr(0, 1).toUpperCase() + str.substr(1).toLowerCase();
 				animation.addByPrefix('hold$i', 'holdCover${pascalCase}0', 24, true);
 				animation.addByPrefix('end$i', 'holdCoverEnd${pascalCase}0', 24, false);
 				animation.addByPrefix('start$i', 'holdCoverStart${pascalCase}0', 24, false);
+
+				// Check the added anims exist in memory
+				if(!animation.getNameList().contains('start$i')) trace('Hold splash is missing \'start$i\' anim!');
+				if(!animation.getNameList().contains('hold$i')) trace('Hold splash is missing \'hold$i\' anim!');
+				if(!animation.getNameList().contains('end$i')) trace('Hold splash is missing \'end$i\' anim!');
 			}
 		} else {
+			// Load anims for with color shader
 			animation.addByPrefix('hold', 'holdCover0', 24, true);
 			animation.addByPrefix('end', 'holdCoverEnd0', 24, false);
 			animation.addByPrefix('start', 'holdCoverStart0', 24, false);
-		}
 
-		if(!noShader && !animation.getNameList().contains("hold")) trace("Hold splash is missing 'hold' anim!");
+			// Check the added anims exist in memory
+			if(!animation.getNameList().contains("start")) trace("Hold splash is missing 'start' anim!");
+			if(!animation.getNameList().contains("hold")) trace("Hold splash is missing 'hold' anim!");
+			if(!animation.getNameList().contains("end")) trace("Hold splash is missing 'end' anim!");
+		}
 	}
 
 	override function update(elapsed)
@@ -75,15 +86,16 @@ class SustainSplash extends FlxSprite
 			ending = false;
 
 			if (note.strum != null) setPosition(note.strum.x, note.strum.y);
+			animId = noShader ? Std.string(note?.noteData ?? 0) : '';
 
-			animation.play('start${noShader ? Std.string(note.noteData) : ''}', true);
+			animation.play('start$animId', true);
 
 			if (animation.curAnim != null)
 			{
 				animation.curAnim.looped = false;
 				animation.curAnim.frameRate = frameRate;
 				animation.finishCallback = a -> {
-					animation.play('hold${noShader ? Std.string(note.noteData) : ''}', true);
+					animation.play('hold$animId', true);
 					animation.curAnim.frameRate = frameRate;
 					animation.curAnim.looped = true;
 				};
@@ -117,7 +129,7 @@ class SustainSplash extends FlxSprite
 		if (animation != null && note != null && note.strum != null)
 		{
 			alpha = ClientPrefs.data.holdSplashAlpha - (1 - note?.strum?.alpha);
-			animation.play('end${noShader ? Std.string(note?.noteData ?? 0) : ''}', true, false, 0);
+			animation.play('end$animId', true, false, 0);
 			animation.curAnim.looped = false;
 			animation.curAnim.frameRate = rnd.int(22, 26);
 			clipRect = null;
