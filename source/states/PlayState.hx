@@ -185,7 +185,7 @@ class PlayState extends MusicBeatState
 	public static var spamNotes:Array<SpamNoteData> = [];
 
 	public var skipGhostNotes:Bool = ClientPrefs.data.skipGhostNotes;
-	public var ghostDencity:Bool = ClientPrefs.data.ghostDencity;
+	public var ghostDensity:Bool = ClientPrefs.data.ghostDensity;
 	public var ghostNotesCaught:Int = 0;
 
 	public var camFollow:FlxObject;
@@ -431,10 +431,10 @@ class PlayState extends MusicBeatState
 		"Heaven or hell",
 		"I'll give u the gift called empty",
 		"Imagine 1 billion notes fnf chart",
-		"Imagine 1 tillion notes fnf chart",
+		"Imagine 1 trillion notes fnf chart",
 		"Run away or someone comes",
 		"Disguised face",
-		"Is rainbow eyesore a drug",
+		"Is rainbow eyesore a drug?",
 		"Any number divided by 0 equals 42",
 		"It's just a text",
 		"Wait, who are you",
@@ -1984,7 +1984,7 @@ class PlayState extends MusicBeatState
 					if (skipGhostNotes && sectionNoteCnt != 0) {
 						if (Math.abs(strumTimeVector[chartNoteData] - strumTime) <= removeTime) {
 							ghostNotesCaught++;
-							ghostDencity ? swagNote.density++ : swagNote.density = 1;
+							ghostDensity ? swagNote.density++ : swagNote.density = 1;
 							continue;
 						} else {
 							strumTimeVector[chartNoteData] = strumTime;

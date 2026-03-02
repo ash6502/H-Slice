@@ -106,9 +106,9 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		ghostRate = option;
 		
 		// It should never happen in the first place...
-		var option:Option = new Option('Simulate Unremoved Overlapped Notes',
-			"It only works with enabled above option, and breaks consistency of the rendered counter.\nCAUTION: If you changed even once this option, It reloads the entire chart when went back to PlayState!",
-			'ghostDencity',
+		var option:Option = new Option('Overlapped Density',
+			"Gives overlapped notes a density value, at the cost of breaking the rendering counter's consistency.\nCAUTION: If this option is changed, going back to PlayState will reload the entire chart!",
+			'ghostDensity',
 			BOOL);
 		addOption(option);
 		option.onChange = onChangeSimulation;
@@ -272,7 +272,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('World Record Mode',
-			"If checked, any option which loses consistency are disabled,\nlike note dencity value, and compressed notes.\nIt's also useful to enjoy the original 'H-Slice'.",
+			"If checked, any options which get rid of consistency are disabled,\nlike note density value, and compressed spam.\nIt's also useful to enjoy the original 'H-Slice'.",
 			'worldRecordMode',
 			'bool');
 		addOption(option);

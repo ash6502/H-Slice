@@ -116,7 +116,7 @@ import states.InitState;
 	public var ghostTapping:Bool = true;
 	public var skipGhostNotes:Bool = false;
 	public var ghostRange:Float = 0.01;
-	public var ghostDencity:Bool = true;
+	public var ghostDensity:Bool = true;
 	public var autoPause:Bool = true;
 	public var checkForUpdates:Bool = true;
 	public var noReset:Bool = false;
