@@ -131,12 +131,14 @@ class FPSCounter extends TextField
 	public dynamic function updateText(deltaTime:Float) {
 		if (ClientPrefs.data.ffmpegMode) {
 			targetFPS = CoolUtil.fillNumber(ClientPrefs.data.targetFPS, FlxMath.minInt(4, Std.string(ClientPrefs.data.targetFPS).length+1), 32, false);
-			fpsStr = 'FPS:$targetFPS - RENDERING${MemoryUtil.isGcEnabled ? "" : " / No GC"}${ClientPrefs.data.worldRecordMode ? " / WR Mode" : ""}\n';
+			fpsStr = 'FPS:$targetFPS - RENDERING${MemoryUtil.isGcEnabled ? "" : " / No GC"}';
 		} else {
 			realFPS = CoolUtil.fillNumber(deltaTime, FlxMath.minInt(4, Std.string(deltaTime).length+1), 32, false);
 			avgFPS = CoolUtil.fillNumber(currentFPS, FlxMath.minInt(4, Std.string(currentFPS).length+1), 32, false);
-			fpsStr = 'FPS:$realFPS |$avgFPS${MemoryUtil.isGcEnabled ? '' : " / No GC"}\n';
+			fpsStr = 'FPS:$realFPS |$avgFPS${MemoryUtil.isGcEnabled ? '' : " / No GC"}';
 		}
+
+		fpsStr += '${ClientPrefs.data.worldRecordMode ? " / WR Mode" : ""}\n';
 		
 		if (ClientPrefs.data.showMemory) {
 			fpsStr += 'RAM: ${CoolUtil.formatBytes(Memory.getCurrentUsage(), 1, true)} / ${CoolUtil.formatBytes(Gc.memInfo64(Gc.MEM_INFO_USAGE), 1, true)}';
