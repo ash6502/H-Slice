@@ -275,6 +275,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			"If checked, any options which get rid of consistency are disabled,\nlike note density value, and compressed spam.\nIt's also useful to enjoy the original 'H-Slice'.",
 			'worldRecordMode',
 			'bool');
+		option.onChange = onChangeFPSCounterWidth;
 		addOption(option);
 
 		#if desktop
@@ -345,5 +346,10 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 	{
 		if(ClientPrefs.data.vibrating)
 			lime.ui.Haptic.vibrate(0, 500);
+	}
+	function onChangeFPSCounterWidth()
+	{
+		Main.fpsBg.relocate(0, 0, ClientPrefs.data.wideScreen);
+		if (PlayState.loaded) PlayState.loaded = false;
 	}
 }
