@@ -163,7 +163,7 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 		scroll.onPartialScroll.add(delta -> changeSelection(delta, false));
 		scroll.onFullScroll.add(delta ->
 		{
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4 * ClientPrefs.data.sfxVolume);
 		});
 		scroll.onFullScrollSnap.add(() -> changeSelection(0, true));
 		scroll.onTap.add(() ->
@@ -437,7 +437,7 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 		if (usePrecision)
 		{
 			if (delta != 0)
-				FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+				FlxG.sound.play(Paths.sound('scrollMenu'), 0.4 * ClientPrefs.data.sfxVolume);
 			curSelected = FlxMath.wrap(curSelected + Std.int(delta), 0, optionsArray.length - 1);
 			curSelectedPartial = curSelected;
 		}
@@ -445,7 +445,7 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 		{
 			curSelectedPartial = FlxMath.bound(curSelectedPartial + delta, 0, optionsArray.length - 1);
 			if (curSelected != Math.round(curSelectedPartial))
-				FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+				FlxG.sound.play(Paths.sound('scrollMenu'), 0.4 * ClientPrefs.data.sfxVolume);
 			curSelected = Math.round(curSelectedPartial);
 		}
 		for (num => item in grpOptions.members)
