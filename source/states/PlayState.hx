@@ -1981,7 +1981,7 @@ class PlayState extends MusicBeatState
 					gottaHitNote = (chartNoteData < totalColumns);
 
 					// CLEAR ANY POSSIBLE GHOST NOTES WHEN IF THE OPTION ENABLED
-					if (skipGhostNotes && sectionNoteCnt != 0 &&) {
+					if (skipGhostNotes && sectionNoteCnt != 0 && !worldRecordMode) {
 						if (Math.abs(strumTimeVector[chartNoteData] - strumTime) <= removeTime) {
 							ghostNotesCaught++;
 							(ghostDensity && !worldRecordMode) ? swagNote.density++ : swagNote.density = 1;
