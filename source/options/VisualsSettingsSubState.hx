@@ -178,7 +178,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Show Info:',
-			"If checked, the game will show the selected infomation on screen.\nMainly for Debug.",
+			"If checked, the game will show the selected information on screen.\nMainly for Debug.",
 			'showInfoType',
 			STRING,
 			[
@@ -280,8 +280,8 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = onChangeFPSCounterHeight;
 		
-		var option:Option = new Option('- OS Infomation',
-			'If checked, shows OS Infomation.',
+		var option:Option = new Option('- OS Information',
+			'If checked, shows OS Information.',
 			'showOS',
 			BOOL);
 		addOption(option);

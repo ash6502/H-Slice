@@ -18,6 +18,7 @@ import options.OptionsState;
 class PauseSubState extends MusicBeatSubstate
 {
 	var grpMenuShit:FlxTypedGroup<Alphabet>;
+	var interpolate = CoolUtil.interpolate;
 
 	var menuItems:Array<String> = [];
 	var menuItemsOG:Array<String> = [
@@ -300,7 +301,7 @@ class PauseSubState extends MusicBeatSubstate
 					holdTime += elapsed;
 					if (holdTime > 0.5)
 					{
-						curTime += 45000 * elapsed * (controls.UI_LEFT ? -1 : 1);
+						curTime += interpolate(30000, 300000, (holdTime - 0.5) / 10, 3) * elapsed * (controls.UI_LEFT ? -1 : 1);
 					}
 
 					if (curTime >= FlxG.sound.music.length)
@@ -451,10 +452,11 @@ class PauseSubState extends MusicBeatSubstate
 							case 'Breakfast (Pixel)': 160.0;
 							default: Conductor.bpm;
 						}
-					} else {
-						FlxG.sound.music.resume();
+					} else @:privateAccess {
+						var inst = pSte.inst;
+						FlxG.sound.playMusic(inst._sound, 0);
 						FlxTween.tween(FlxG.sound.music, {volume: ClientPrefs.data.bgmVolume}, 0.8);
-						FlxG.sound.music.looped = true;
+						FlxG.sound.music.time = Conductor.songPosition;
 					}
 					OptionsState.onPlayState = true;
 				case "Exit to menu":

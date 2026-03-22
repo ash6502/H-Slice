@@ -139,6 +139,8 @@ class PlayState extends MusicBeatState
 	public var noteKillOffset:Float = 0;
 
 	public var playbackRate(default, set):Float = 1;
+	var normalRate:Float;
+	var skipRate:Float;
 
 	public var boyfriendGroup:FlxSpriteGroup;
 	public var dadGroup:FlxSpriteGroup;
@@ -398,7 +400,7 @@ class PlayState extends MusicBeatState
 	var revStr = CoolUtil.reverseString;
 	var numberDelimit = ClientPrefs.data.numberFormat;
 
-	// Debug Infomations
+	// Debug Informations
 	var showInfoType = ClientPrefs.data.showInfoType;
 
 	// songTime but it's based in nano second lmfao.
@@ -532,6 +534,8 @@ class PlayState extends MusicBeatState
 
 		PauseSubState.songName = null; // Reset to default
 		playbackRate = ClientPrefs.getGameplaySetting('songspeed');
+		normalRate = playbackRate;
+		skipRate = playbackRate * 8;
 
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -2399,7 +2403,7 @@ class PlayState extends MusicBeatState
 	var skipHit:Int = 0;
 	var globalNoteHit:Bool = false;
 	var globalFrameHit:Bool = false;
-	var daHit:Bool = false;
+	var opHit:Bool = false;
 	var bfHit:Bool = false;
 	var noteDataInfo:Int = 0;
 
@@ -2413,7 +2417,7 @@ class PlayState extends MusicBeatState
 	var skipTotalCnt:Float = 0;
 	var skipMax:Float = 0;
 
-	// Infomation
+	// Information
 	var changeInfo:Bool = false;
 	var debugInfos:Bool = false;
 	var columnIndex:Int = 0;
@@ -2452,8 +2456,13 @@ class PlayState extends MusicBeatState
 	{
 		// Pre Render Image
 		if (preshot) renderFrame();
+
+		if (!ffmpegMode && cpuControlled) {
+			if (FlxG.keys.justPressed.SPACE) playbackRate = skipRate;
+			if (FlxG.keys.released.SPACE) playbackRate = normalRate;
+		}
 		
-		daHit = bfHit = showAgain = false; canAnim.fill(true);
+		opHit = bfHit = showAgain = false; canAnim.fill(true);
 		if (popUpHitNote != null) popUpHitNote = null;
 		hit = skipHit = susEnds = 0;
 		shownCnt = skipBf = skipOp = 0;
@@ -2624,9 +2633,7 @@ class PlayState extends MusicBeatState
 		noteFinalize();
 		/* --- main process --- */
 
-		if (sortingWay >= 3) {
-			noteSort();
-		}
+		if (sortingWay >= 3) noteSort();
 		
 		if (overHealth) healthLerp = healthLerper();
 		else {
@@ -2637,8 +2644,9 @@ class PlayState extends MusicBeatState
 		updateIconsScale(globalElapsed);
 		updateIconsPosition();
 
-		// if (bfHit || daHit) {
-		updateScoreText();
+		// if (bfHitFrame > 0 || opHitFrame > 0 || health >= 2) {
+			updateScoreText();
+			bfHitFrame = opHitFrame = 0;
 		// }
 		
 		if (!overHealth) healthLerp = healthLerper();
@@ -2873,7 +2881,7 @@ class PlayState extends MusicBeatState
 								info = '${f[0]} / ${f[1]}, ${numFormat(f[2], 3)}';
 								f = null;
 							} else {
-								info = 'Up/Down Key to change infomation';
+								info = 'Up/Down Key to change information';
 							}
 						case 1:
 							info = '${numFormat(dad != null ? dad.holdTimer : Math.NaN, 3)}, '
@@ -2998,14 +3006,17 @@ class PlayState extends MusicBeatState
 		}
 	}
 
-	var barPos:Float = 0;
-	var lerpHP:Float = 0;
 	public dynamic function updateIconsPosition()
 	{
-		lerpHP = healthLerp * 0.5;
-		barPos = healthBar.x + healthBar.barWidth - lerpHP * healthBar.barWidth;
-		iconP1.x = barPos + (150 * iconP1.scale.x - 150) / 2 - 26;
-		iconP2.x = barPos - (150 * iconP2.scale.x) / 2 - 52;
+		var barPos = healthBar.x + healthBar.barWidth - healthLerp * .5 * healthBar.barWidth;
+
+		iconP1.x = barPos + (iconP1.width - iconP1.iconW) * .5 - iconP1.iconW * .1733333333333333;
+		iconP2.x = barPos - iconP2.width * .5 - iconP1.iconW * .3466666666666667;
+
+		iconP1.y = healthBar.y - iconP1.height * .5;
+		iconP2.y = healthBar.y - iconP2.height * .5;
+
+		// Eseq.p('${iconP1.width}, ${iconP2.width}');
 	}
 
 	var limitCount = 0;
@@ -3692,8 +3703,6 @@ class PlayState extends MusicBeatState
 					health += hitHealth * diffCnt * healthGain;
 			}
 		} else health += bf * hitHealth * healthGain;
-
-		bfHitFrame = opHitFrame = 0;
 	}
 
 	var cancelCount:Int = 0;
@@ -5156,9 +5165,9 @@ class PlayState extends MusicBeatState
 			camZooming = true;
 		globalNoteHit = true;
 
-		if (daHit && note.sustainLength > 0) daHit = false;
+		if (opHit && note.sustainLength > 0) opHit = false;
 		
-		if (!daHit) {
+		if (!opHit) {
 			if (note.noteType == 'Hey!' && dad.hasAnimation('hey'))
 			{
 				dad.playAnim('hey', true);
@@ -5221,7 +5230,7 @@ class PlayState extends MusicBeatState
 	
 		++opHitFrame;
 		if (!note.isSustainNote) {			
-			opCombo += note.density; opSideHit += note.density; daHit = true;
+			opCombo += note.density; opSideHit += note.density; opHit = true;
 			if (showPopups && changePopup) popUpHitNote = note;
 			invalidateNote(note);
 		}
@@ -5579,14 +5588,14 @@ class PlayState extends MusicBeatState
 						// multPlusY = 0.0;
 						angle = (index == 0 ? 25 : -25);
 					case 'HRK Style':
-						if (curBeat % 2 == 0) {
-							multPlusX = (index == 0 ? 0.8 : 0.2);
-							multPlusY = (index == 0 ? 0.2 : 0.15);
-							angle = (index == 0 ? 30 : -20);
+						if ((curBeat % 2 == 0) == (index == 0)) { // Simulate XNOR branch
+							multPlusX = 0.8;
+							multPlusY = 0.2;
+							angle = 30;
 						} else {
-							multPlusX = (index == 1 ? 0.8 : 0.2);
-							multPlusY = (index == 1 ? 0.2 : 0.15);
-							angle = (index == 1 ? 30 : -20);
+							multPlusX = 0.2;
+							multPlusY = 0.15;
+							angle = -20;
 						}
 				}
 

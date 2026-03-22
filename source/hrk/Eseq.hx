@@ -5,7 +5,7 @@ import mikolka.compatibility.VsliceOptions;
 
 class Eseq {
     public static var available = true;
-    static final Escape = '\x1b[0G';
+    static final Escape = '\r';
 
     public static function p(d:Dynamic = null) {
         if (!available) return;
