@@ -23,8 +23,8 @@ class Logger {
             #else
             #if macos
             if(StorageUtil.getStorageDirectory().contains("AppTranslocation"))
-                CoolUtil.showPopUp("MacOS decided to isolate H-Slice from the rest of your system!"+
-                "As such, you need to move H-Slice away from the \"Downloads\" folder into either your applications, or another folder.","File logging failed to init");
+                CoolUtil.showPopUp("MacOS decided to isolate H-Slice + JS from the rest of your system!"+
+                "As such, you need to move it away from the \"Downloads\" folder into either your applications, or another folder.","File logging failed to init");
             else
             #end
             CoolUtil.showPopUp(x.message,"File logging failed to init");
