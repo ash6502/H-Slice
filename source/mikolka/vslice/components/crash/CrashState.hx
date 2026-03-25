@@ -51,7 +51,7 @@ class CrashState extends FlxState
 		var star = #if CHECK_FOR_UPDATES "" #else "*" #end;
 		dateNow = dateNow.replace(' ', '_');
 		dateNow = dateNow.replace(':', "'");
-		errMsg += 'H-Slice ${MainMenuState.hrkVersion}$star\n';
+		errMsg += 'H-Slice+JS ${MainMenuState.hrkVersion}$star\n';
 		errMsg += '\nUncaught Error: ' + error.message + "\n";
 		for (x in error.extendedTrace)
 		{

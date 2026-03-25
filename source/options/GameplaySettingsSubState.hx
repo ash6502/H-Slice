@@ -86,13 +86,13 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Remove Overlapped Notes',
-			"If checked, the game will remove notes which are hidden behind the others.\nThe range is controlled by the option below.",
+			"If checked, the game skips loading notes which are hidden behind the others.",
 			'skipGhostNotes',
 			BOOL);
 		addOption(option);
 
-		var option:Option = new Option(' - Threshold:',
-			"Threshold of the option above.\nYou can set it in milliseconds.",
+		var option:Option = new Option('- Threshold:',
+			"Threshold of the option above.\nDisplayed in milliseconds, but configurable in microseconds.",
 			'ghostRange',
 			FLOAT);
 		option.displayFormat = '%v ms';
@@ -104,6 +104,14 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = onRangeUpdateRate;
 		ghostRate = option;
+		
+		// It should never happen in the first place...
+		var option:Option = new Option('Overlapped Density',
+			"Gives overlapped notes a density value, at the cost of breaking the rendering counter's consistency.\nCAUTION: If this option is changed, going back to PlayState will reload the entire chart!",
+			'ghostDensity',
+			BOOL);
+		addOption(option);
+		option.onChange = onChangeSimulation;
 		
 		var option:Option = new Option('Auto Pause',
 			"If checked, the game automatically pauses if the screen isn't on focus.",
@@ -263,6 +271,13 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.changeValue = 0.1;
 		addOption(option);
 
+		var option:Option = new Option('World Record Mode',
+			"If checked, any options which get rid of consistency are disabled,\nlike note density value, and compressed spam.\nIt's also useful to enjoy the original 'H-Slice'.",
+			'worldRecordMode',
+			'bool');
+		option.onChange = onChangeFPSCounterWidth;
+		addOption(option);
+
 		#if desktop
 		var option:Option = new Option('Full Screen shortcut on F11',
 			"If checked, the F11 key will toggle full screen, just like Alt+Enter.\nIt's for avoiding other processing interruptions.",
@@ -272,6 +287,10 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		#end
 
 		super();
+	}
+
+	function onChangeSimulation() {
+		PlayState.loaded = false;
 	}
 
 	function onStepUpdateRate(){
@@ -327,5 +346,10 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 	{
 		if(ClientPrefs.data.vibrating)
 			lime.ui.Haptic.vibrate(0, 500);
+	}
+	function onChangeFPSCounterWidth()
+	{
+		Main.fpsBg.relocate(0, 0, ClientPrefs.data.wideScreen);
+		if (PlayState.loaded) PlayState.loaded = false;
 	}
 }

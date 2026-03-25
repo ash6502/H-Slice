@@ -139,6 +139,8 @@ class PlayState extends MusicBeatState
 	public var noteKillOffset:Float = 0;
 
 	public var playbackRate(default, set):Float = 1;
+	var normalRate:Float;
+	var skipRate:Float;
 
 	public var boyfriendGroup:FlxSpriteGroup;
 	public var dadGroup:FlxSpriteGroup;
@@ -185,6 +187,7 @@ class PlayState extends MusicBeatState
 	public static var spamNotes:Array<SpamNoteData> = [];
 
 	public var skipGhostNotes:Bool = ClientPrefs.data.skipGhostNotes;
+	public var ghostDensity:Bool = ClientPrefs.data.ghostDensity;
 	public var ghostNotesCaught:Int = 0;
 
 	public var camFollow:FlxObject;
@@ -383,6 +386,7 @@ class PlayState extends MusicBeatState
 	var limitNotes:Int = ClientPrefs.data.limitNotes;
 	var hideOverlapped:Float = ClientPrefs.data.hideOverlapped;
 	var skipSpawnNote:Bool = ClientPrefs.data.skipSpawnNote;
+	var bulkSkip:Bool = ClientPrefs.data.bulkSkip;
 	var breakTimeLimit:Bool = ClientPrefs.data.breakTimeLimit;
 	var optimizeSpawnNote:Bool = ClientPrefs.data.optimizeSpawnNote;
 
@@ -396,12 +400,15 @@ class PlayState extends MusicBeatState
 	var revStr = CoolUtil.reverseString;
 	var numberDelimit = ClientPrefs.data.numberFormat;
 
-	// Debug Infomations
+	// Debug Informations
 	var showInfoType = ClientPrefs.data.showInfoType;
 
 	// songTime but it's based in nano second lmfao.
 	public static var nanoTime:Float = 0;
 	public static var elapsedNano:Float = 0;
+
+	// for original H-Slice
+	var worldRecordMode = ClientPrefs.data.worldRecordMode;
 	
 	private static var _lastLoadedModDirectory:String = '';
 	public static var nextReloadAll:Bool = false;
@@ -426,10 +433,11 @@ class PlayState extends MusicBeatState
 		"Heaven or hell",
 		"I'll give u the gift called empty",
 		"Imagine 1 billion notes fnf chart",
+		"Imagine 1 trillion notes fnf chart",
 		"Run away or someone comes",
 		"Disguised face",
-		"Is rainbow eyesore a drug",
-		"Divived by 0 equals 42",
+		"Is rainbow eyesore a drug?",
+		"Any number divided by 0 equals 42",
 		"It's just a text",
 		"Wait, who are you",
 		"Hello, visitor!",
@@ -437,7 +445,6 @@ class PlayState extends MusicBeatState
 		"Amogus",
 		"Is it impossible?",
 		"Testing... just testing...",
-		"Imagine 1 tillion notes fnf chart",
 		"Gf neck is getting bonk",
 		"It's a benchmark",
 		"B0TPL4Y",
@@ -445,7 +452,7 @@ class PlayState extends MusicBeatState
 		"Never gonna give you up",
 		"Spamming spamming spamming",
 		"Beware memory leaks",
-		"When would it can multi-threaded processing",
+		"When would it can multi-threaded processing", // sadly opengl only supports single-threaded rendering... i'll wait haxeflixel can use vulkan
 		"Help me, I have programming skill issue",
 		"Demon is inside bot",
 		"Don't worry, You can beat this",
@@ -488,7 +495,7 @@ class PlayState extends MusicBeatState
 	];
 
 	public static var canResync:Bool = false;
-	public static var loaded(default, null):Bool = false;
+	public static var loaded:Bool = false;
 
 	override public function create()
 	{
@@ -527,6 +534,8 @@ class PlayState extends MusicBeatState
 
 		PauseSubState.songName = null; // Reset to default
 		playbackRate = ClientPrefs.getGameplaySetting('songspeed');
+		normalRate = playbackRate;
+		skipRate = playbackRate * 8;
 
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -1013,7 +1022,7 @@ class PlayState extends MusicBeatState
 				}
 			};
 			currentId = middle;
-			trace('next index is $currentId');
+			trace('next index is ${numberDelimit ? formatD(currentId) : Std.string(currentId)}');
 		}
 
 		#if desktop
@@ -1596,17 +1605,25 @@ class PlayState extends MusicBeatState
 	var opComboStr:String;
 	var comboStr:String;
 	var notesStr:String;
+	var hpPrecision:Int;
 	public dynamic function updateScoreText()
 	{
 		targetHealth = health * 50;
 		if (!practiceMode) {
 			updateScoreStr = Language.getPhrase('rating_$ratingName', ratingName);
 			if (totalPlayed != 0)
-				updateScoreStr += ' (${CoolUtil.floorDecimal(ratingPercent * 100, 3)} %) - ' + Language.getPhrase(ratingFC);
+				updateScoreStr += ' (${CoolUtil.floorDecimal(ratingPercent * 100, 3)} %) - ${Language.getPhrase(ratingFC)}';
 		}
 		
-		if (practiceMode) hpShowStr = CoolUtil.formatMoney(targetHealth) + ' %';
-		else hpShowStr = numFormat(targetHealth, 4 - Std.string(Math.floor(targetHealth)).length, true) + (targetHealth >= 0.001 ? ' %' : '');
+		if (practiceMode) hpShowStr = '${numberDelimit ? formatD(targetHealth) : Std.string(targetHealth)} %';
+		else {
+			hpPrecision = 4 - Std.string(Math.floor(targetHealth)).length;
+			if (hpPrecision > 0) {
+				hpShowStr = '${numberDelimit ? numFormat(targetHealth, hpPrecision, true) : Std.string(targetHealth)} ${targetHealth >= 0.001 ? '%' : ''}';
+			} else {
+				hpShowStr = '${numberDelimit ? formatD(targetHealth, hpPrecision, true) : Std.string(targetHealth)} %';
+			}
+		}
 
 		if (!cpuControlled) {
 			if (!instakillOnMiss && !instacrashOnMiss) {
@@ -1887,6 +1904,7 @@ class PlayState extends MusicBeatState
 			var sectionsData:Array<SwagSection> = SONG.notes;
 			var daBpm:Float = Conductor.bpm;
 
+			var secCnt:Int = 0;
 			var cnt:Int = 0;
 			var notes:Int = 0;
 
@@ -1931,16 +1949,29 @@ class PlayState extends MusicBeatState
 				if (Timer.stamp() - syncTime > updateElapse || force)
 				{
 					if (numberDelimit) 
-						Eseq.p('Loading ${formatD(cnt)}/${formatD(sectionsData.length)} (${formatD(notes + sectionNoteCnt)}/$totalNoteCnt notes)');
+						Eseq.p('Loading ${formatD(secCnt)}/${formatD(sectionsData.length)} (${formatD(notes + sectionNoteCnt)}/${formatD(totalNoteCnt)} notes)');
 					else
-						Eseq.p('Loading $cnt/${sectionsData.length} (${notes + sectionNoteCnt}/$totalNoteCnt notes)');
+						Eseq.p('Loading $secCnt/${sectionsData.length} (${notes + sectionNoteCnt}/$totalNoteCnt notes)');
 					syncTime = Timer.stamp();
 				}
+			}
+			
+			// Do not declare inside loops. This causes memory leaks.
+			function extractSpamData(note:Array<Dynamic>):Array<Float> {
+				for (slot in [3, 4]) {
+					var field = note[slot];
+					if (Std.isOfType(field, Array)) {
+						return cast field;
+					} else if (field != null && field.cmpSpam != null) {
+						var bd = field.cmpSpam;
+						if (Std.isOfType(bd, Array)) return bd;
+					}
+				}
+				return null;
 			}
 
 			for (section in sectionsData)
 			{
-				++cnt;
 				sectionNoteCnt = 0;
 				shownProgress = false;
 				if (section.changeBPM != null && section.changeBPM && section.bpm != null && daBpm != section.bpm)
@@ -1954,9 +1985,11 @@ class PlayState extends MusicBeatState
 					gottaHitNote = (chartNoteData < totalColumns);
 
 					// CLEAR ANY POSSIBLE GHOST NOTES WHEN IF THE OPTION ENABLED
-					if (skipGhostNotes && sectionNoteCnt != 0) {
+					if (skipGhostNotes && sectionNoteCnt != 0 && !worldRecordMode) {
 						if (Math.abs(strumTimeVector[chartNoteData] - strumTime) <= removeTime) {
-							ghostNotesCaught++; swagNote.density++; continue;
+							ghostNotesCaught++;
+							(ghostDensity && !worldRecordMode) ? swagNote.density++ : swagNote.density = 1;
+							continue;
 						} else {
 							strumTimeVector[chartNoteData] = strumTime;
 						}
@@ -1967,25 +2000,14 @@ class PlayState extends MusicBeatState
 						noteData: noteColumn
 					};
 					if (skipGhostNotes && (swagNote.density == null || swagNote.density > 1)) swagNote.density = 1;
-					
+
 					if (Std.isOfType(songNotes[3], String))
 						swagNote.noteType = songNotes[3];
 					
-					function extractSpamData(note:Array<Dynamic>):Array<Float> {
-						for (slot in [3, 4]) {
-							var field = note[slot];
-							if (Std.isOfType(field, Array)) {
-								return cast field;
-							} else if (field != null && field.cmpSpam != null) {
-								var bd = field.cmpSpam;
-								if (Std.isOfType(bd, Array)) return bd;
-							}
-						}
-						return null;
+					if (!worldRecordMode) {
+						burst = extractSpamData(songNotes);
+						if (burst != null) swagNote.cmpSpam = burst;
 					}
-
-					burst = extractSpamData(songNotes);
-					if (burst != null) swagNote.cmpSpam = burst;
 					
 					swagNote.noteData |= gottaHitNote ? 1<<8 : 0; // mustHit
 					swagNote.noteData |= (section.gfSection && (gfSide ? gottaHitNote : !gottaHitNote)) || songNotes[3] == 'GF Sing' || songNotes[3] == 4 ? 1<<11 : 0; // gfNote
@@ -2026,11 +2048,11 @@ class PlayState extends MusicBeatState
 						noteTypes.push(swagNote.noteType);
 
 					showProgress();
-					++sectionNoteCnt;
+					++sectionNoteCnt; ++cnt;
 				}
-
-				showProgress();
 				notes += sectionNoteCnt;
+				++secCnt;
+				showProgress();
 			}
 
 			showProgress(true);
@@ -2042,13 +2064,15 @@ class PlayState extends MusicBeatState
 
 			Eseq.pln('Loaded ${numberDelimit ? formatD(notes) : Std.string(notes)} notes!\n' + 
 					'Sustain notes amount: ${numberDelimit ? formatD(sustainTotalCnt) : Std.string(sustainTotalCnt)}\n' + 
-					'Taken time: ${numFormat(takenTime, 6)} sec\n' + 
-					'Average NPS in loading: ${numFormat(notes / takenNoteTime, 3)}'
+					'Taken time: ${numberDelimit ? formatD(takenTime, 6) : Std.string(takenTime)} sec\n' + 
+					'Average NPS in loading: ${numberDelimit ? formatD(notes / takenNoteTime, 3) : Std.string(notes / takenNoteTime)}'
 			);
 
 			if (skipGhostNotes) {
-				if (ghostNotesCaught > 0)
+				if (ghostNotesCaught > 0) {
 					Eseq.pln('Overlapped Notes Cleared: $ghostNotesCaught');
+					unspawnNotes.resize(notes);
+				}
 				else {
 					Eseq.pln('WOW! There are no overlapped notes. Great charting!');
 				}
@@ -2379,7 +2403,7 @@ class PlayState extends MusicBeatState
 	var skipHit:Int = 0;
 	var globalNoteHit:Bool = false;
 	var globalFrameHit:Bool = false;
-	var daHit:Bool = false;
+	var opHit:Bool = false;
 	var bfHit:Bool = false;
 	var noteDataInfo:Int = 0;
 
@@ -2393,7 +2417,7 @@ class PlayState extends MusicBeatState
 	var skipTotalCnt:Float = 0;
 	var skipMax:Float = 0;
 
-	// Infomation
+	// Information
 	var changeInfo:Bool = false;
 	var debugInfos:Bool = false;
 	var columnIndex:Int = 0;
@@ -2432,8 +2456,13 @@ class PlayState extends MusicBeatState
 	{
 		// Pre Render Image
 		if (preshot) renderFrame();
+
+		if (!ffmpegMode && cpuControlled) {
+			if (FlxG.keys.justPressed.SPACE) playbackRate = skipRate;
+			if (FlxG.keys.released.SPACE) playbackRate = normalRate;
+		}
 		
-		daHit = bfHit = showAgain = false; canAnim.fill(true);
+		opHit = bfHit = showAgain = false; canAnim.fill(true);
 		if (popUpHitNote != null) popUpHitNote = null;
 		hit = skipHit = susEnds = 0;
 		shownCnt = skipBf = skipOp = 0;
@@ -2513,7 +2542,7 @@ class PlayState extends MusicBeatState
 			#if desktop
 			if (ffmpegMode) {
 				if (video.wentPreview == null) {
-					botplayTxt.text = botplaySineCnt % 2 == 0 ? "RENDERED" : "BY H-SLICE-JS";
+					botplayTxt.text = botplaySineCnt % 2 == 0 ? "RENDERED" : "BY H-SLICE+JS";
 				} else {
 					botplayTxt.text = botplaySineCnt % 2 == 0 ? "Rendering was cancelled by: " : video.wentPreview;
 				}
@@ -2604,9 +2633,7 @@ class PlayState extends MusicBeatState
 		noteFinalize();
 		/* --- main process --- */
 
-		if (sortingWay >= 3) {
-			noteSort();
-		}
+		if (sortingWay >= 3) noteSort();
 		
 		if (overHealth) healthLerp = healthLerper();
 		else {
@@ -2617,8 +2644,9 @@ class PlayState extends MusicBeatState
 		updateIconsScale(globalElapsed);
 		updateIconsPosition();
 
-		// if (bfHit || daHit) {
-		updateScoreText();
+		// if (bfHitFrame > 0 || opHitFrame > 0 || health >= 2) {
+			updateScoreText();
+			bfHitFrame = opHitFrame = 0;
 		// }
 		
 		if (!overHealth) healthLerp = healthLerper();
@@ -2853,7 +2881,7 @@ class PlayState extends MusicBeatState
 								info = '${f[0]} / ${f[1]}, ${numFormat(f[2], 3)}';
 								f = null;
 							} else {
-								info = 'Up/Down Key to change infomation';
+								info = 'Up/Down Key to change information';
 							}
 						case 1:
 							info = '${numFormat(dad != null ? dad.holdTimer : Math.NaN, 3)}, '
@@ -2978,14 +3006,17 @@ class PlayState extends MusicBeatState
 		}
 	}
 
-	var barPos:Float = 0;
-	var lerpHP:Float = 0;
 	public dynamic function updateIconsPosition()
 	{
-		lerpHP = healthLerp * 0.5;
-		barPos = healthBar.x + healthBar.barWidth - lerpHP * healthBar.barWidth;
-		iconP1.x = barPos + (150 * iconP1.scale.x - 150) / 2 - 26;
-		iconP2.x = barPos - (150 * iconP2.scale.x) / 2 - 52;
+		var barPos = healthBar.x + healthBar.barWidth - healthLerp * .5 * healthBar.barWidth;
+
+		iconP1.x = barPos + (iconP1.width - iconP1.iconW) * .5 - iconP1.iconW * .1733333333333333;
+		iconP2.x = barPos - iconP2.width * .5 - iconP1.iconW * .3466666666666667;
+
+		iconP1.y = healthBar.y - iconP1.height * .5;
+		iconP2.y = healthBar.y - iconP2.height * .5;
+
+		// Eseq.p('${iconP1.width}, ${iconP2.width}');
 	}
 
 	var limitCount = 0;
@@ -3025,88 +3056,161 @@ class PlayState extends MusicBeatState
 	var currSus:Array<Bool> = [];
 	var prevSus:Array<Bool> = [];
 
+	var skipNoteFrom:CastNote;
+	var skipNoteData:Int;
+	var rangeCastHold:Bool;
+	var rangeCastMust:Bool;
+	var rangeLane:Int;
 	inline function applySkipRange(from:Int, to:Int) {
-		var idx = from;
-		var n = unspawnNotes[idx];
-		var data = 0;
+		skipNoteFrom = unspawnNotes[from];
+		skipNoteData = 0;
 
-		while (idx < to) {
-			n = unspawnNotes[idx];
+		while (from < to) {
+			skipNoteFrom = unspawnNotes[from];
 
-			if (n.cmpSpam != null) {
+			if (skipNoteFrom.cmpSpam != null) {
 				spamNotes.push({
-					remaining: (n.cmpSpam[0]),
-					density: n.cmpSpam[1],
-					seedNote: n
+					remaining: (skipNoteFrom.cmpSpam[0]),
+					density: skipNoteFrom.cmpSpam[1],
+					seedNote: skipNoteFrom
 				});
 
-				n.cmpSpam = null;
+				skipNoteFrom.cmpSpam = null;
 				continue;
 			}
-			data = n.noteData;
+			skipNoteData = skipNoteFrom.noteData;
 
-			var castHold = (data & (1 << 9)) != 0;
-			var castMust = (data & (1 << 8)) != 0;
-			var lane = (data + (castMust ? 4 : 0)) & 255;
+			rangeCastHold = (skipNoteData & (1 << 9)) != 0;
+			rangeCastMust = (skipNoteData & (1 << 8)) != 0;
+			rangeLane = (skipNoteData + (rangeCastMust ? 4 : 0)) & 255;
 
-			skipHit |= 1 << lane;
+			skipHit |= 1 << rangeLane;
 
 			if (cpuControlled) {
-				if (!castHold)
-					castMust ? skipBf += n.density ?? 1 : skipOp += n.density ?? 1;
+				if (!rangeCastHold)
+					rangeCastMust ? skipBf += skipNoteFrom.density ?? 1 : skipOp += skipNoteFrom.density ?? 1;
 			} else {
-				castMust ? noteMissCommon(lane) : skipOp += n.density ?? 1;
+				rangeCastMust ? noteMissCommon(rangeLane) : skipOp += skipNoteFrom.density ?? 1;
 			}
 
-			if (enableHoldSplash && castHold && (data & (1 << 10)) != 0)
-				susEnds |= 1 << lane;
+			if (enableHoldSplash && rangeCastHold && (skipNoteData & (1 << 10)) != 0)
+				susEnds |= 1 << rangeLane;
 
-			if (enableSplash && !castHold &&
-				(cpuControlled || !castMust) &&
-				splashMoment[lane] < splashCount)
+			if (enableSplash && !rangeCastHold &&
+				(cpuControlled || !rangeCastMust) &&
+				splashMoment[rangeLane] < splashCount)
 			{
-				var arr = splashUsing[lane];
-				if (arr.length < splashCount) {
-					skipNoteSplash.recycleNote(n);
+				if (splashUsing[rangeLane].length < splashCount) {
+					skipNoteSplash.recycleNote(skipNoteFrom);
 					spawnNoteSplashOnNote(skipNoteSplash);
 				}
 			}
 
-			if (castMust) skipBfCNote = n; else skipOpCNote = n;
-			++idx;
+			if (rangeCastMust) skipBfCNote = skipNoteFrom; else skipOpCNote = skipNoteFrom;
+			++from;
 		}
 	}
 
+	var firstId:Int;
+	var lastId:Int;
+	var middleId:Int;
+	var middleNote:CastNote;
 	inline function findSkipBoundary(start:Int, fp:Float):Int {
-		var lo = start;
-		var hi = unspawnNotes.length;
+		firstId = start;
+		lastId = unspawnNotes.length;
 
-		while (lo < hi) {
-			var mid = (lo + hi) >>> 1;
-			var n = unspawnNotes[mid];
+		while (firstId < lastId) {
+			middleId = (firstId + lastId) >>> 1;
+			middleNote = unspawnNotes[middleId];
 
-			if (fp > n.strumTime)
-				lo = mid + 1;
+			if (fp > middleNote.strumTime)
+				firstId = middleId + 1;
 			else
-				hi = mid;
+				lastId = middleId;
 		}
 
-		return lo;
+		return firstId;
 	}
 
 	inline function fastSkipRegularNotes(fp:Float):Bool {
-		if (!optimizeSpawnNote && !skipSpawnNote)
+		if ((!optimizeSpawnNote && !skipSpawnNote) || !bulkSkip)
 			return false;
 
-		var end = findSkipBoundary(currentId, fp);
+		lastId = findSkipBoundary(currentId, fp);
 
-		if (end > currentId) {
-			applySkipRange(currentId, end);
-			currentId = end;
+		if (lastId > currentId) {
+			applySkipRange(currentId, lastId);
+			currentId = lastId;
 			return true;
 		}
 
 		return false;
+	}
+	
+	// Do not declare inside loops. This causes memory leaks.
+	var prevStrumTime:Float;
+	var bulkSkipCount:Float;
+	var noteInterval:Float;
+	function spamSpawn() {
+		for (spam in spamNotes) {
+			fixedPosition = Conductor.songPosition - ClientPrefs.data.noteOffset;
+			limitCount = notes.countLiving();
+
+			initSpawnInfo(spam.seedNote);
+			isDisplay = spam.seedNote.strumTime - fixedPosition < shownTime;
+
+			while (isDisplay && limitCount < limitNotes)
+			{
+				prevStrumTime = spam.seedNote.strumTime;
+				canBeHit = fixedPosition > spam.seedNote.strumTime; // false is before, true is after
+				timeLimit = (nanoPosition ? CoolUtil.getNanoTime() : Timer.stamp()) - timeout < shownRealTime;
+
+				isCanPass = !skipSpawnNote || (keepNotes ? !canBeHit : timeLimit);
+				if (showAfter) {
+					if (!showAgain && !canBeHit) {
+						showAgain = true;
+						lDist = []; dist = [];
+						lDist.resize(8); dist.resize(8);
+						timeout = nanoPosition ? CoolUtil.getNanoTime() : Timer.stamp();
+					}
+				}
+				if ((!canBeHit || !optimizeSpawnNote) && isCanPass) spawn(spam.seedNote);
+				else {
+					bulkSkipCount = 0;
+					noteInterval = (15000 / spawnBPM) / spam.density;
+					if (spam.seedNote.strumTime < fixedPosition) {
+						// Only skip notes that are fully in the past
+						bulkSkipCount = Math.ffloor((fixedPosition - spam.seedNote.strumTime) / noteInterval) - 1;
+						bulkSkipCount = Math.min(bulkSkipCount, spam.remaining);
+					}
+					if (bulkSkipCount > 0) {
+						spam.seedNote.strumTime += bulkSkipCount * noteInterval;
+						spam.remaining -= bulkSkipCount;
+						// Update skip counters
+						if (castMust) skipBf += bulkSkipCount;
+						else skipOp += bulkSkipCount;
+						skipCnt += bulkSkipCount;
+						if (castMust) skipBfCNote = spam.seedNote; else skipOpCNote = spam.seedNote;
+
+						if (spam.remaining <= 0) {
+							spamNotes.remove(spam);
+							break;
+						}
+					}
+					skipNote(spam.seedNote);
+				}
+
+				if (spam.remaining > 0)
+					spam.remaining--;
+				else { spamNotes.remove(spam); break; }
+				spam.seedNote.strumTime += (15000/spawnBPM)/spam.density;
+				spawnBPM = Conductor.getBPMFromSeconds(spam.seedNote.strumTime).bpm;
+
+				initSpawnInfo(spam.seedNote);
+				isDisplay = spam.seedNote.strumTime - fixedPosition < shownTime && spam.seedNote.strumTime != prevStrumTime;
+				timeLimit = (nanoPosition ? CoolUtil.getNanoTime() : Timer.stamp()) - timeout < shownRealTime;
+			}
+		}
 	}
 
 	public function noteSpawn()
@@ -3115,68 +3219,6 @@ class PlayState extends MusicBeatState
 
 		lDist = []; dist = [];
 		lDist.resize(8); dist.resize(8);
-
-		function spamSpawn() {
-			for (spam in spamNotes) {
-				fixedPosition = Conductor.songPosition - ClientPrefs.data.noteOffset;
-				limitCount = notes.countLiving();
-
-				initSpawnInfo(spam.seedNote);
-				isDisplay = spam.seedNote.strumTime - fixedPosition < shownTime;
-
-				while (isDisplay && limitCount < limitNotes)
-				{
-					var oldST = spam.seedNote.strumTime;
-					canBeHit = fixedPosition > spam.seedNote.strumTime; // false is before, true is after
-					timeLimit = (nanoPosition ? CoolUtil.getNanoTime() : Timer.stamp()) - timeout < shownRealTime;
-
-					isCanPass = !skipSpawnNote || (keepNotes ? !canBeHit : timeLimit);
-					if (showAfter) {
-						if (!showAgain && !canBeHit) {
-							showAgain = true;
-							lDist = []; dist = [];
-							lDist.resize(8); dist.resize(8);
-							timeout = nanoPosition ? CoolUtil.getNanoTime() : Timer.stamp();
-						}
-					}
-					if ((!canBeHit || !optimizeSpawnNote) && isCanPass) spawn(spam.seedNote);
-					else {
-						var bulkSkipCount:Float = 0;
-						var noteInterval:Float = (15000 / spawnBPM) / spam.density;
-						if (spam.seedNote.strumTime < fixedPosition) {
-							// Only skip notes that are fully in the past
-							bulkSkipCount = Math.ffloor((fixedPosition - spam.seedNote.strumTime) / noteInterval) - 1;
-							bulkSkipCount = Math.min(bulkSkipCount, spam.remaining);
-						}
-						if (bulkSkipCount > 0) {
-							spam.seedNote.strumTime += bulkSkipCount * noteInterval;
-							spam.remaining -= bulkSkipCount;
-							// Update skip counters
-							if (castMust) skipBf += bulkSkipCount;
-							else skipOp += bulkSkipCount;
-							skipCnt += bulkSkipCount;
-							if (castMust) skipBfCNote = spam.seedNote; else skipOpCNote = spam.seedNote;
-
-							if (spam.remaining <= 0) {
-								spamNotes.remove(spam);
-								break;
-							}
-						}
-						skipNote(spam.seedNote);
-					}
-
-					if (spam.remaining > 0)
-						spam.remaining--;
-					else { spamNotes.remove(spam); break; }
-					spam.seedNote.strumTime += (15000/spawnBPM)/spam.density;
-					spawnBPM = Conductor.getBPMFromSeconds(spam.seedNote.strumTime).bpm;
-
-					initSpawnInfo(spam.seedNote);
-					isDisplay = spam.seedNote.strumTime - fixedPosition < shownTime && spam.seedNote.strumTime != oldST;
-					timeLimit = (nanoPosition ? CoolUtil.getNanoTime() : Timer.stamp()) - timeout < shownRealTime;
-				}
-			}
-		}
 		
 		fixedPosition = Conductor.songPosition - ClientPrefs.data.noteOffset;
 		limitCount = notes.countLiving();
@@ -3191,7 +3233,6 @@ class PlayState extends MusicBeatState
 
 			while (isDisplay && limitCount < limitNotes)
 			{
-
 				canBeHit = fixedPosition > targetNote.strumTime; // false is before, true is after
 				tooLate = fixedPosition > targetNote.strumTime + noteKillOffset;
 				noteJudge = castHold ? tooLate : canBeHit;
@@ -3662,8 +3703,6 @@ class PlayState extends MusicBeatState
 					health += hitHealth * diffCnt * healthGain;
 			}
 		} else health += bf * hitHealth * healthGain;
-
-		bfHitFrame = opHitFrame = 0;
 	}
 
 	var cancelCount:Int = 0;
@@ -3761,7 +3800,6 @@ class PlayState extends MusicBeatState
 
 	public var isDead:Bool = false; // Don't mess with this on Lua!!!
 	public var gameOverTimer:FlxTimer;
-
 	function doDeathCheck(?skipHealthCheck:Bool = false)
 	{
 		if (((skipHealthCheck && instakillOnMiss) || health <= 0) && !isDead && gameOverTimer == null)
@@ -5127,9 +5165,9 @@ class PlayState extends MusicBeatState
 			camZooming = true;
 		globalNoteHit = true;
 
-		if (daHit && note.sustainLength > 0) daHit = false;
+		if (opHit && note.sustainLength > 0) opHit = false;
 		
-		if (!daHit) {
+		if (!opHit) {
 			if (note.noteType == 'Hey!' && dad.hasAnimation('hey'))
 			{
 				dad.playAnim('hey', true);
@@ -5192,7 +5230,7 @@ class PlayState extends MusicBeatState
 	
 		++opHitFrame;
 		if (!note.isSustainNote) {			
-			opCombo += note.density; opSideHit += note.density; daHit = true;
+			opCombo += note.density; opSideHit += note.density; opHit = true;
 			if (showPopups && changePopup) popUpHitNote = note;
 			invalidateNote(note);
 		}
@@ -5550,14 +5588,14 @@ class PlayState extends MusicBeatState
 						// multPlusY = 0.0;
 						angle = (index == 0 ? 25 : -25);
 					case 'HRK Style':
-						if (curBeat % 2 == 0) {
-							multPlusX = (index == 0 ? 0.8 : 0.2);
-							multPlusY = (index == 0 ? 0.2 : 0.15);
-							angle = (index == 0 ? 30 : -20);
+						if ((curBeat % 2 == 0) == (index == 0)) { // Simulate XNOR branch
+							multPlusX = 0.8;
+							multPlusY = 0.2;
+							angle = 30;
 						} else {
-							multPlusX = (index == 1 ? 0.8 : 0.2);
-							multPlusY = (index == 1 ? 0.2 : 0.15);
-							angle = (index == 1 ? 30 : -20);
+							multPlusX = 0.2;
+							multPlusY = 0.15;
+							angle = -20;
 						}
 				}
 

@@ -15,7 +15,7 @@ class MainMenuState extends MusicBeatState
 	#end
 	public static var pSliceVersion:String = '3.3.1';
 	public static var funkinVersion:String = '0.7.4'; // Version of funkin' we are emulationg
-	public static var hrkVersion:String = '0.2.3'; // Version of H-Slice
+	public static var hrkVersion:String = '0.2.4'; // Version of H-Slice
 	public static var curSelected:Int = 0;
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
@@ -68,7 +68,7 @@ class MainMenuState extends MusicBeatState
 		add(magenta);
 
 		var padding:Float = 8;
-		var hrkVer:FlxText = new FlxText(padding, FlxG.height - 78 - padding, FlxG.width, 'H-Slice v' + hrkVersion, 12);
+		var hrkVer:FlxText = new FlxText(padding, FlxG.height - 78 - padding, FlxG.width, 'H-Slice+JS v' + hrkVersion, 12);
 		var psliceVer:FlxText = new FlxText(padding, FlxG.height - 58 - padding, FlxG.width, 'P-Slice v${pSliceVersion}', 12);
 		var psychVer:FlxText = new FlxText(padding, FlxG.height - 38 - padding, FlxG.width, 'Psych Engine v' + psychEngineVersion, 12);
 		var fnfVer:FlxText = new FlxText(padding, FlxG.height - 18 - padding, FlxG.width, 'Friday Night Funkin\' v${funkinVersion}', 12);
@@ -127,7 +127,7 @@ class MainMenuState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		if (FlxG?.sound?.music?.volume < 0.8)
+		if (FlxG?.sound?.music?.length > 1000 && FlxG?.sound?.music?.volume < 0.8)
 			FlxG.sound.music.volume += 0.5 * elapsed;
 		super.update(elapsed);
 	}

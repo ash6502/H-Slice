@@ -51,15 +51,15 @@ class OptimizeSettingsSubState extends BaseOptionsMenu
 		 	BOOL);
 		addOption(option);
 		
-        var option:Option = new Option('Sort Notes:',
-			"If checked, the notes array is sorted every frame when notes are added.\nUsing 'Never' improves performance, especially if a lot of notes are displayed.\nDefault: \"After Note Finalized\"",
+        var option:Option = new Option('Note Sorting:',
+			"If not set to 'Never', the notes array is sorted every frame when notes are added.\nUsing 'Never' improves performance, especially if a lot of notes are displayed.\nDefault: \"After Note Finalized\"",
 			'sortNotes',
 			STRING,
 			SORT_PATTERN); //Variable type
 		addOption(option);
 
         var option:Option = new Option('Faster Sort',
-			"If checked, It sorts only visible objects.",
+			"If checked, only visible notes will be sorted.",
 			'fastSort',
 			BOOL);
 		addOption(option);
@@ -83,8 +83,8 @@ class OptimizeSettingsSubState extends BaseOptionsMenu
 		limitCount = option;
 		addOption(option);
 
-		var option:Option = new Option('Invisible overlapped notes:',
-			"It hides the overlapped note which can't be easily noticed by pixels.",
+		var option:Option = new Option('Overlapped Threshold:',
+			"Hides overlapped notes which can't be easily noticed by pixels according to the value.",
 			'hideOverlapped',
 			FLOAT);
 		option.displayFormat = "%v pixels";
@@ -96,48 +96,54 @@ class OptimizeSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
         var option:Option = new Option('Process Notes before Spawning',
-			"If checked, it process notes before they spawn.\nIt boosts game performance massively.\nIt is recommended to enable this option.",
+			"If checked, the game processes notes before spawning any.\nIt boosts game performance massively.\nIt is recommended to enable this option.",
 			'processFirst',
 			BOOL);
 		addOption(option);
 
-        var option:Option = new Option('Skip Process for Spawned Note',
-			"If checked, enables Skip Note Function.\nIt boosts game performance massively, but it only works in specific situations.\nIf you don't understand, enable this.",
+        var option:Option = new Option('Note Skipping',
+			"If checked, the game can skip notes.\nIt boosts game performance massively, but only in specific scenarios.\nIf you don't understand, enable this.",
 			'skipSpawnNote',
 			BOOL);
 		addOption(option);
 
-        var option:Option = new Option(' - Break on Time Limit Exceeded',
-			"If checked, the note spawn loop cancels if the time limit is exceeded.\nIt may have good performance on some scenes.",
+		var option:Option = new Option('Bulk Skipping',
+			"If checked, enables bulk skipping.\nIt boosts game performance a lot, especially when handling millions of NPS.\nIf you don't understand, enable this.",
+			'bulkSkip',
+			BOOL);
+		addOption(option);
+
+        var option:Option = new Option('Spawning Time Limit',
+			"If checked, the note spawn loop cancels if the time limit is exceeded.\nIt may boost performance on some scenarios.",
 			'breakTimeLimit',
 			BOOL);
 		addOption(option);
 
-        var option:Option = new Option('Optimize Process for Spawned Note',
-			"If checked, it judges whether or not to do hit logic\nimmediately when a note spawned. It boosts game performance massively,\nbut it only works in specific situations. If you don't understand, enable this.",
+        var option:Option = new Option('Insta-Check Spawned Notes',
+			"If checked, it judges whether or not to do hit logic\nimmediately after a note is spawned. It boosts game performance massively,\nbut only in specific scenarios. If you don't understand, enable this.",
 			'optimizeSpawnNote',
 			BOOL);
 		addOption(option);
 
-        var option:Option = new Option('noteHitPreEvent',
+        var option:Option = new Option('noteHitPreEvents',
 			"If unchecked, the game will not send any noteHitPreEvent on Lua/HScript.",
 			'noteHitPreEvent',
 			BOOL);
 		addOption(option);
 
-        var option:Option = new Option('noteHitEvent',
+        var option:Option = new Option('noteHitEvents',
 			"If unchecked, the game will not send any noteHitEvent on Lua/HScript.\nNot recommended to disable this option.",
 			'noteHitEvent',
 			BOOL);
 		addOption(option);
 
-		var option:Option = new Option('spawnNoteEvent',
+		var option:Option = new Option('spawnNoteEvents',
 			"If unchecked, the game will not send spawn event\non Lua/HScript for spawned notes. Improves performance.",
 			'spawnNoteEvent',
 			BOOL);
 		addOption(option);
 
-        var option:Option = new Option('noteHitEvent for stages',
+        var option:Option = new Option('noteHitEvents for stages',
 			"If unchecked, the game will not send any noteHitEvent on stage.\nNot recommended to disable this option for vanilla stages.",
 			'noteHitStage',
 			BOOL);
@@ -160,9 +166,5 @@ class OptimizeSettingsSubState extends BaseOptionsMenu
 
 	function onChangeLimitCount(){
 		limitCount.scrollSpeed = interpolate(30, 50000, (holdTime - 0.5) / 10, 3);
-	}
-
-	function onChangeCacheCount(){
-		cacheCount.scrollSpeed = interpolate(30, 50000, (holdTime - 0.5) / 10, 3);
 	}
 }

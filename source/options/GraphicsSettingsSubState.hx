@@ -64,7 +64,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		#if MULTITHREADED_LOADING
-		var option:Option = new Option('Multithreaded Caching', //Name
+		var option:Option = new Option('Multi-Threaded Caching', //Name
 			"If checked, enables multithreaded loading, which improves loading times but with a low chance for the game to freeze while loading a song.", //Description
 			'cacheOnCPU',
 			BOOL);

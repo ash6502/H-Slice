@@ -624,6 +624,8 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	}
 
 	function reloadCheckboxes()
-		for (checkbox in checkboxGroup)
-			checkbox.daValue = Std.string(optionsArray[checkbox.ID].getValue()) == 'true'; // Do not take off the Std.string() from this, it will break a thing in Mod Settings Menu
+		if (checkboxGroup != null) 
+			for (checkbox in checkboxGroup)
+				if (checkbox != null)
+					checkbox.daValue = Std.string(optionsArray[checkbox.ID].getValue()) == 'true'; // Do not take off the Std.string() from this, it will break a thing in Mod Settings Menu
 }

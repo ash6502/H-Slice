@@ -16,12 +16,12 @@ jobs:
           - name: Desktop
             os: ubuntu-latest
             setupScript: sh ./setup/unix.sh
-            CACHE_NAME: H-Slice.desktop-cache
+            CACHE_NAME: H-Slice+JS.desktop-cache
 
           - name: Mobile
             os: macos-latest
             setupScript: sh ./setup/mobile.sh
-            CACHE_NAME: H-Slice.mobile-cache
+            CACHE_NAME: H-Slice+JS.mobile-cache
     uses: ./.github/workflows/dependencies.yml
     with:
       os: ${{ matrix.os }}
@@ -34,10 +34,10 @@ jobs:
     uses: ./.github/workflows/mac-universal.yml
     with:
       exportPath: macos
-      artifactName: H-Slice_0.2.3_macos
+      artifactName: H-Slice+JS_0.2.4_macos
       artifactPath: export/release/macos/bin/*
-      cachePath: H-Slice.build-macos
-      cacheLibrariesPath: H-Slice.mobile-cache
+      cachePath: H-Slice+JS.build-macos
+      cacheLibrariesPath: H-Slice+JS.mobile-cache
   BuildDesktop:
     name: ${{ matrix.name }}
     needs: BuildCaches
@@ -49,18 +49,18 @@ jobs:
             os: windows-2022
             buildArgs: windows
             exportPath: windows
-            artifactName: H-Slice_0.2.3_windows
+            artifactName: H-Slice+JS_0.2.4_windows
             artifactPath: export\release\windows\bin\*
-            cachePath: H-Slice.build-windows
-            cacheLibrariesPath: H-Slice.desktop-cache
+            cachePath: H-Slice+JS.build-windows
+            cacheLibrariesPath: H-Slice+JS.desktop-cache
           - name: Linux
             os: ubuntu-22.04
             buildArgs: linux
             exportPath: linux
-            artifactName: H-Slice_0.2.3_linux
+            artifactName: H-Slice+JS_0.2.4_linux
             artifactPath: export/release/linux/bin/*
-            cachePath: H-Slice.build-linux
-            cacheLibrariesPath: H-Slice.desktop-cache
+            cachePath: H-Slice+JS.build-linux
+            cacheLibrariesPath: H-Slice+JS.desktop-cache
 
     uses: ./.github/workflows/build.yml
     with:
@@ -84,18 +84,18 @@ jobs:
             os: macos-15
             buildArgs: "android"
             exportPath: android
-            artifactName: H-Slice_0.2.3_android
+            artifactName: H-Slice+JS_0.2.4_android
             artifactPath: "export/release/android/bin/app/build/outputs/apk/release/*.apk"
-            cachePath: H-Slice.build-android
-            cacheLibrariesPath: H-Slice.mobile-cache
+            cachePath: H-Slice+JS.build-android
+            cacheLibrariesPath: H-Slice+JS.mobile-cache
           - name: iOS
             os: macos-15
             buildArgs: "ios -nosign"
             exportPath: ios
-            artifactName: H-Slice_0.2.3_ios
+            artifactName: H-Slice+JS_0.2.4_ios
             artifactPath: "export/release/ios/build/Release-iphoneos/*.ipa"
-            cachePath: H-Slice.build-ios
-            cacheLibrariesPath: H-Slice.mobile-cache
+            cachePath: H-Slice+JS.build-ios
+            cacheLibrariesPath: H-Slice+JS.mobile-cache
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
