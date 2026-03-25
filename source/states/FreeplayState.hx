@@ -725,7 +725,7 @@ class FreeplayState extends MusicBeatState
 	var min:Int = 0;
 	var max:Int = 0;
 
-	public function updateTexts(elapsed:Float = 0.0)
+	public function updateTexts(elapsed:Float)
 	{
 		if (grpSongs.length == 0 || iconGroup.length == 0) return;
 		lerpSelected = FlxMath.lerp(curSelected, lerpSelected, Math.exp(-elapsed * 9.6));
