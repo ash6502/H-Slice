@@ -1,4 +1,4 @@
-h slice but it has the best optiomzation optimization It has the                                                                                  optimzation
+h slice but it has the best optiomzation optimization It has the&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;optimzation
 
 <h1 align="center">
   <br>
@@ -25,7 +25,7 @@ Welcome to **H-Slice** (HRK Engine Redux), a Friday Night Funkin' engine optimiz
 This engine builds upon features from my previous engine and may include new features in the future.
 
 ### *If you plan to integrate my features into your own engine,*
-### *Please contact me first and CREDIT H-SLICE.*
+### *Please contact to hrk first and CREDIT H-SLICE.*
 
 **Note:** This engine is designed for playing large, unplayable charts using BOTPLAY. It is not intended for regular gameplay.
 
